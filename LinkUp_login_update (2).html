@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#168653" />
+  <title>LinkUp — Messages, made simple</title>
+  <style>
+    :root {
+      --green: #168653;
+      --green-dark: #0e6b40;
+      --green-soft: #e7f7ee;
+      --bg: #f3f7f4;
+      --panel: #ffffff;
+      --text: #183128;
+      --muted: #73847b;
+      --line: #e5eee8;
+      --sent: #d9f8e5;
+      --shadow: 0 18px 55px rgba(24, 70, 48, .10);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; padding: 22px;
+      background: radial-gradient(circle at top left, #e0f5e9, transparent 38%), var(--bg);
+      color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .app-shell {
+      max-width: 1180px; height: min(790px, calc(100vh - 44px)); min-height: 580px;
+      margin: 0 auto; background: var(--panel); border: 1px solid #e4eee7;
+      border-radius: 24px; box-shadow: var(--shadow); overflow: hidden; display: flex;
+    }
+    .sidebar { width: 340px; min-width: 290px; display: flex; flex-direction: column; border-right: 1px solid var(--line); }
+    .brand-row { padding: 22px 22px 18px; display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; align-items: center; gap: 11px; font-weight: 800; font-size: 23px; letter-spacing: -.7px; }
+    .logo {
+      width: 42px; height: 42px; border-radius: 15px; display: grid; place-items: center;
+      color: white; background: linear-gradient(145deg, #21a366, #0d7146); box-shadow: 0 7px 18px #16865335;
+    }
+    .brand small { display: block; font-size: 11px; letter-spacing: .3px; color: var(--muted); font-weight: 500; margin-top: 1px; }
+    .pill { border: 1px solid #d8eee1; color: var(--green-dark); background: #f2fbf5; border-radius: 999px; padding: 7px 10px; font-size: 11px; font-weight: 700; }
+    .profile-box { margin: 0 18px 16px; background: #f7fbf8; border: 1px solid var(--line); border-radius: 16px; padding: 12px; display: flex; align-items: center; gap: 10px; }
+    .avatar { flex: 0 0 auto; width: 42px; height: 42px; border-radius: 50%; background: var(--green-soft); color: var(--green-dark); display: grid; place-items: center; font-weight: 800; }
+    .profile-info { min-width: 0; flex: 1; }
+    .profile-info strong { display: block; font-size: 13px; overflow: hidden; text-overflow: ellipsis; }
+    .profile-info span { display: block; color: var(--muted); font-size: 11px; margin-top: 3px; }
+    .icon-btn { border: 0; background: transparent; color: var(--muted); padding: 7px; border-radius: 9px; }
+    .icon-btn:hover { background: #eaf5ee; color: var(--green-dark); }
+    .section-label { padding: 0 21px 10px; display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; }
+    .add-row { display: flex; gap: 8px; padding: 0 18px 17px; }
+    input {
+      width: 100%; min-width: 0; border: 1px solid #dfeae3; background: #fbfdfb; color: var(--text);
+      padding: 12px 13px; border-radius: 12px; outline: none; transition: border .2s, box-shadow .2s;
+    }
+    input:focus { border-color: #69bd8d; box-shadow: 0 0 0 3px #16865316; }
+    input::placeholder { color: #9aa9a0; }
+    .primary-btn { border: 0; border-radius: 12px; background: var(--green); color: #fff; padding: 0 15px; font-weight: 750; transition: transform .15s, background .15s; }
+    .primary-btn:hover { background: var(--green-dark); transform: translateY(-1px); }
+    .primary-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .chat-list { flex: 1; overflow: auto; padding: 0 10px 12px; }
+    .chat-item { width: 100%; border: 0; background: transparent; display: flex; align-items: center; gap: 11px; text-align: left; padding: 12px; border-radius: 14px; color: var(--text); }
+    .chat-item:hover { background: #f5faf6; }
+    .chat-item.active { background: #eaf8ef; }
+    .chat-item .chat-preview { min-width: 0; flex: 1; }
+    .chat-item strong { display: block; font-size: 13px; }
+    .chat-item span { display: block; margin-top: 4px; font-size: 11px; color: var(--muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .empty-list { color: var(--muted); font-size: 12px; text-align: center; line-height: 1.6; padding: 24px 18px; }
+    .sidebar-footer { border-top: 1px solid var(--line); padding: 14px 18px; font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
+    .chat-panel { min-width: 0; flex: 1; display: flex; flex-direction: column; background: #fcfefc; }
+    .chat-header { height: 83px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; padding: 16px 24px; background: #fff; }
+    .chat-header-info { flex: 1; min-width: 0; }
+    .chat-header-info strong { display: block; font-size: 15px; }
+    .chat-header-info span { display: block; color: var(--muted); font-size: 11px; margin-top: 4px; }
+    .connection { color: var(--green); font-size: 11px; display: flex; align-items: center; gap: 6px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #2bbd70; display: inline-block; }
+    .messages {
+      flex: 1; overflow: auto; padding: 24px clamp(16px, 4vw, 48px);
+      background-color: #f8fbf8;
+      background-image: radial-gradient(#dcece1 0.7px, transparent 0.7px);
+      background-size: 18px 18px;
+    }
+    .date-chip { text-align: center; margin: 0 auto 22px; width: fit-content; padding: 7px 12px; border-radius: 999px; color: #6c8073; background: #ffffffdd; border: 1px solid #e5eee7; font-size: 10px; font-weight: 750; }
+    .message-row { display: flex; margin: 10px 0; }
+    .message-row.mine { justify-content: flex-end; }
+    .bubble { max-width: min(75%, 470px); padding: 11px 13px 8px; border-radius: 15px 15px 15px 4px; background: #fff; box-shadow: 0 2px 7px #1831280a; border: 1px solid #e9f0eb; overflow-wrap: anywhere; }
+    .mine .bubble { background: var(--sent); border-color: #c9efd7; border-radius: 15px 15px 4px 15px; }
+    .bubble p { margin: 0; white-space: pre-wrap; font-size: 13px; line-height: 1.5; }
+    .bubble time { display: block; text-align: right; color: #7e9587; font-size: 9px; margin-top: 5px; }
+    .welcome { margin: auto; text-align: center; max-width: 380px; padding: 30px; }
+    .welcome-logo { width: 82px; height: 82px; margin: 0 auto 20px; display: grid; place-items: center; border-radius: 28px; background: linear-gradient(145deg, #dff8e8, #b9ebcd); color: var(--green-dark); }
+    .welcome h1 { font-size: 27px; letter-spacing: -1px; margin: 0 0 9px; }
+    .welcome p { font-size: 13px; line-height: 1.7; color: var(--muted); margin: 0; }
+    .composer { padding: 16px 22px 20px; display: flex; gap: 10px; align-items: center; background: white; border-top: 1px solid var(--line); }
+    .composer input { background: #f8fbf9; border-radius: 14px; padding: 14px 16px; }
+    .send-btn { width: 48px; height: 48px; flex: 0 0 auto; border: 0; border-radius: 15px; color: white; background: var(--green); display: grid; place-items: center; }
+    .send-btn:hover { background: var(--green-dark); }
+    .send-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .status { min-height: 20px; padding: 0 20px 10px; color: #ad4c32; font-size: 11px; }
+    .modal-backdrop { position: fixed; inset: 0; background: #10291dcc; display: grid; place-items: center; padding: 20px; z-index: 10; }
+    .modal { width: min(410px, 100%); background: white; border-radius: 24px; padding: 30px; box-shadow: 0 25px 90px #10291d55; }
+    .modal h2 { margin: 0 0 8px; font-size: 25px; letter-spacing: -.7px; }
+    .modal p { color: var(--muted); font-size: 12px; line-height: 1.6; margin: 0 0 20px; }
+    .modal label { display: block; font-size: 11px; font-weight: 800; margin: 13px 0 7px; color: #4c6355; }
+    .modal .primary-btn { width: 100%; min-height: 45px; margin-top: 16px; }
+    .fine-print { font-size: 10px !important; margin: 13px 0 0 !important; }
+    .hidden { display: none !important; }
+    @media (max-width: 700px) {
+      body { padding: 0; }
+      .app-shell { height: 100dvh; min-height: 0; border-radius: 0; border: 0; }
+      .sidebar { width: 100%; min-width: 0; border-right: 0; }
+      .chat-panel { display: none; }
+      .app-shell.chat-open .sidebar { display: none; }
+      .app-shell.chat-open .chat-panel { display: flex; width: 100%; }
+      .mobile-back { display: inline-grid !important; }
+      .chat-header { padding: 12px 14px; height: 72px; }
+      .messages { padding: 18px 14px; }
+      .composer { padding: 12px; }
+      .brand-row { padding-top: 17px; }
+    }
+    .mobile-back { display: none; }
+  </style>
+</head>
+<body>
+  <main class="app-shell" id="appShell">
+    <aside class="sidebar">
+      <div class="brand-row">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 6.5C5 5.67 5.67 5 6.5 5h11A1.5 1.5 0 0 1 19 6.5v8a1.5 1.5 0 0 1-1.5 1.5H11l-4.5 3v-3H6.5A1.5 1.5 0 0 1 5 14.5v-8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m8 9 3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>LinkUp<small>Good conversations start here</small></div>
+        </div>
+        <span class="pill">BETA</span>
+      </div>
+      <div class="profile-box">
+        <div class="avatar" id="myAvatar">?</div>
+        <div class="profile-info"><strong id="myUsername">Not signed in</strong><span>Username account</span></div>
+        <button class="icon-btn" id="changeUserBtn" title="Switch username" aria-label="Switch username">↻</button>
+      </div>
+      <div class="section-label"><span>Messages</span><span id="chatCount">0 chats</span></div>
+      <form class="add-row" id="addFriendForm">
+        <input id="friendUsername" maxlength="20" autocomplete="off" placeholder="Find by username…" aria-label="Find by username" />
+        <button class="primary-btn" type="submit">Add</button>
+      </form>
+      <div class="status" id="sidebarStatus" role="status"></div>
+      <div class="chat-list" id="chatList"><div class="empty-list">Your chats will appear here.<br/>Add a friend by username to get started.</div></div>
+      <div class="sidebar-footer"><span>● Secure connection via Firebase</span><span>LinkUp ©</span></div>
+    </aside>
+
+    <section class="chat-panel">
+      <header class="chat-header hidden" id="chatHeader">
+        <button class="icon-btn mobile-back" id="backBtn" aria-label="Back to chats">←</button>
+        <div class="avatar" id="activeAvatar">?</div>
+        <div class="chat-header-info"><strong id="activeUsername">Friend</strong><span>Private conversation</span></div>
+        <div class="connection"><span class="dot"></span> Live chat</div>
+      </header>
+      <div class="messages" id="messages">
+        <div class="welcome" id="welcome">
+          <div class="welcome-logo">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-5 4v-4h-.5A2.5 2.5 0 0 1 3 13.5v-8" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="m7 8 3 3 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h1>Make a connection.</h1>
+          <p>Choose a conversation or find a friend by username. Your next great conversation starts with LinkUp.</p>
+        </div>
+      </div>
+      <form class="composer hidden" id="messageForm">
+        <input id="messageInput" maxlength="2000" autocomplete="off" placeholder="Write a message…" aria-label="Write a message" />
+        <button class="send-btn" id="sendBtn" type="submit" aria-label="Send message">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="m21 3-7.2 18-3.8-7-7-3.8L21 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 14 21 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </form>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="loginModal">
+    <form class="modal" id="loginForm">
+      <div class="logo" style="margin-bottom:18px">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 6.5C5 5.67 5.67 5 6.5 5h11A1.5 1.5 0 0 1 19 6.5v8a1.5 1.5 0 0 1-1.5 1.5H11l-4.5 3v-3H6.5A1.5 1.5 0 0 1 5 14.5v-8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      </div>
+      <h2>Welcome to LinkUp</h2>
+      <p>Choose a unique username to start chatting. No phone number required.</p>
+      <label for="usernameInput">Your username</label>
+      <input id="usernameInput" maxlength="20" autocomplete="username" placeholder="e.g. ali_786" required />
+      <button class="primary-btn" id="loginBtn" type="submit">Continue to LinkUp</button>
+      <p class="fine-print">Demo account: no password or phone number. Your username is reserved, but this starter version does not support account recovery.</p>
+      <div class="status" id="loginStatus" role="status"></div>
+    </form>
+  </div>
+
+  <script type="module">
+    // 1) Replace the placeholder Firebase settings below with your own Firebase web app config.
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+    import {
+      getAuth, signInAnonymously, onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, setDoc, runTransaction, collection,
+      query, where, onSnapshot, addDoc, orderBy, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBLqTM9rn0FECpb8SNI4jdRPhPdNlOFoNs",
+  authDomain: "linkup-abdbb.firebaseapp.com",
+  projectId: "linkup-abdbb",
+  storageBucket: "linkup-abdbb.firebasestorage.app",
+  messagingSenderId: "133613910513",
+  appId: "1:133613910513:web:eecd3ea55bf557c10e6c50",
+  measurementId: "G-W1GRFXEQFV"
+};
+
+
+
+    const configIsMissing = Object.values(firebaseConfig).some(value => value.startsWith("PASTE_"));
+    const $ = (id) => document.getElementById(id);
+    const appShell = $("appShell");
+    const loginModal = $("loginModal");
+    const loginForm = $("loginForm");
+    const usernameInput = $("usernameInput");
+    const loginBtn = $("loginBtn");
+    const loginStatus = $("loginStatus");
+    const sidebarStatus = $("sidebarStatus");
+    const chatList = $("chatList");
+    const messagesEl = $("messages");
+    const welcome = $("welcome");
+    const chatHeader = $("chatHeader");
+    const messageForm = $("messageForm");
+    const messageInput = $("messageInput");
+    const sendBtn = $("sendBtn");
+
+    let auth, db, currentUser = null, profile = null, activeChatId = null, activeFriend = null;
+    let stopChatsListener = null, stopMessagesListener = null;
+    let knownChats = new Map();
+
+    function setStatus(el, text, isError = true) {
+      el.textContent = text;
+      el.style.color = isError ? "#ad4c32" : "#168653";
+    }
+    function cleanUsername(value) { return value.trim().toLowerCase(); }
+    function validUsername(value) { return /^[a-z0-9_]{3,20}$/.test(value); }
+    function initials(name) { return (name || "?").slice(0, 1).toUpperCase(); }
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, ch => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[ch]));
+    }
+    function showLogin(message = "") {
+      loginModal.classList.remove("hidden");
+      if (message) setStatus(loginStatus, message);
+      setTimeout(() => usernameInput.focus(), 50);
+    }
+    function hideLogin() { loginModal.classList.add("hidden"); }
+    function stopListeners() {
+      if (stopChatsListener) stopChatsListener();
+      if (stopMessagesListener) stopMessagesListener();
+      stopChatsListener = stopMessagesListener = null;
+    }
+    function showError(error, element = sidebarStatus) {
+      console.error(error);
+      const code = error?.code || "";
+      let message = error?.message || "Something went wrong. Please try again.";
+      if (code.includes("permission-denied")) message = "Firebase denied this action. Check that Firestore rules are published.";
+      if (code.includes("unavailable")) message = "Network unavailable. Check your internet connection.";
+      setStatus(element, message);
+    }
+
+    if (configIsMissing) {
+      showLogin("Setup needed: add your Firebase config in index.html first.");
+      loginBtn.disabled = true;
+      setStatus(loginStatus, "First complete the Firebase setup in README.md.");
+    } else {
+      const firebaseApp = initializeApp(firebaseConfig);
+      auth = getAuth(firebaseApp);
+      db = getFirestore(firebaseApp);
+      onAuthStateChanged(auth, async (user) => {
+        currentUser = user;
+        if (!user) {
+          try { await signInAnonymously(auth); }
+          catch (error) { showError(error, loginStatus); }
+          return;
+        }
+        try {
+          const profileSnap = await getDoc(doc(db, "users", user.uid));
+          if (profileSnap.exists()) {
+            profile = profileSnap.data();
+            enterApp();
+          } else {
+            showLogin();
+          }
+        } catch (error) { showError(error, loginStatus); }
+      });
+    }
+
+    loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!db || !currentUser) {
+        setStatus(loginStatus, "Please finish Firebase setup and reload the page.");
+        return;
+      }
+      const username = cleanUsername(usernameInput.value);
+      if (!validUsername(username)) {
+        setStatus(loginStatus, "Use 3–20 characters: lowercase letters, numbers or underscores.");
+        return;
+      }
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Creating account…";
+      try {
+        const userRef = doc(db, "users", currentUser.uid);
+        const usernameRef = doc(db, "usernames", username);
+        await runTransaction(db, async (transaction) => {
+          const existingUser = await transaction.get(userRef);
+          if (existingUser.exists()) return;
+          const existingName = await transaction.get(usernameRef);
+          if (existingName.exists()) throw new Error("That username is already taken. Please choose another.");
+          transaction.set(usernameRef, { uid: currentUser.uid, username });
+          transaction.set(userRef, { uid: currentUser.uid, username, createdAt: serverTimestamp() });
+        });
+        const snap = await getDoc(userRef);
+        profile = snap.data();
+        enterApp();
+      } catch (error) {
+        showError(error, loginStatus);
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Continue to LinkUp";
+      }
+    });
+
+    function enterApp() {
+      hideLogin();
+      $("myUsername").textContent = "@" + profile.username;
+      $("myAvatar").textContent = initials(profile.username);
+      setStatus(sidebarStatus, "You're signed in as @" + profile.username, false);
+      listenForChats();
+    }
+
+    $("changeUserBtn").addEventListener("click", async () => {
+      if (!auth) return;
+      if (!confirm("Switching username signs this anonymous account out. This account cannot be recovered on another device. Continue?")) return;
+      stopListeners();
+      profile = null; activeChatId = null; activeFriend = null; knownChats.clear();
+      try { await signOut(auth); location.reload(); }
+      catch (error) { showError(error); }
+    });
+
+    function listenForChats() {
+      if (stopChatsListener) stopChatsListener();
+      const chatsQuery = query(collection(db, "chats"), where("participants", "array-contains", currentUser.uid));
+      stopChatsListener = onSnapshot(chatsQuery, async (snapshot) => {
+        const entries = [];
+        for (const chatDoc of snapshot.docs) {
+          const data = chatDoc.data();
+          const otherUid = data.participants.find(uid => uid !== currentUser.uid);
+          if (!otherUid) continue;
+          try {
+            const otherSnap = await getDoc(doc(db, "users", otherUid));
+            if (!otherSnap.exists()) continue;
+            const otherProfile = otherSnap.data();
+            entries.push({ id: chatDoc.id, otherUid, username: otherProfile.username, profile: otherProfile });
+          } catch (error) { console.error(error); }
+        }
+        knownChats = new Map(entries.map(item => [item.id, item]));
+        renderChatList(entries);
+        if (activeChatId && knownChats.has(activeChatId)) {
+          activeFriend = knownChats.get(activeChatId);
+          $("activeUsername").textContent = "@" + activeFriend.username;
+          $("activeAvatar").textContent = initials(activeFriend.username);
+        }
+      }, showError);
+    }
+
+    function renderChatList(entries) {
+      $("chatCount").textContent = `${entries.length} ${entries.length === 1 ? "chat" : "chats"}`;
+      if (!entries.length) {
+        chatList.innerHTML = '<div class="empty-list">No conversations yet.<br/>Enter a friend’s exact username above.</div>';
+        return;
+      }
+      chatList.innerHTML = "";
+      entries.sort((a, b) => a.username.localeCompare(b.username));
+      for (const item of entries) {
+        const button = document.createElement("button");
+        button.className = "chat-item" + (item.id === activeChatId ? " active" : "");
+        button.innerHTML = `<div class="avatar">${escapeHtml(initials(item.username))}</div><div class="chat-preview"><strong>${escapeHtml("@" + item.username)}</strong><span>Open conversation</span></div><span aria-hidden="true">›</span>`;
+        button.addEventListener("click", () => openChat(item));
+        chatList.appendChild(button);
+      }
+    }
+
+    $("addFriendForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!profile || !db) return;
+      const username = cleanUsername($("friendUsername").value);
+      if (!validUsername(username)) {
+        setStatus(sidebarStatus, "Enter a username with 3–20 letters, numbers or underscores.");
+        return;
+      }
+      if (username === profile.username) {
+        setStatus(sidebarStatus, "That's your own username. Try a friend's username.");
+        return;
+      }
+      setStatus(sidebarStatus, "Looking for @" + username + "…", false);
+      try {
+        const nameSnap = await getDoc(doc(db, "usernames", username));
+        if (!nameSnap.exists()) {
+          setStatus(sidebarStatus, "Username not found. Ask your friend to sign in to LinkUp first.");
+          return;
+        }
+        const otherUid = nameSnap.data().uid;
+        const otherSnap = await getDoc(doc(db, "users", otherUid));
+        if (!otherSnap.exists()) throw new Error("This user profile could not be found.");
+        const pair = [currentUser.uid, otherUid].sort();
+        const chatId = pair.join("_");
+        const chatRef = doc(db, "chats", chatId);
+        const chatSnap = await getDoc(chatRef);
+        if (!chatSnap.exists()) {
+          await setDoc(chatRef, { participants: pair, createdAt: serverTimestamp() });
+        }
+        $("friendUsername").value = "";
+        setStatus(sidebarStatus, "Connected with @" + username, false);
+        openChat({ id: chatId, otherUid, username, profile: otherSnap.data() });
+      } catch (error) { showError(error); }
+    });
+
+    function openChat(item) {
+      activeChatId = item.id;
+      activeFriend = item;
+      $("activeUsername").textContent = "@" + item.username;
+      $("activeAvatar").textContent = initials(item.username);
+      chatHeader.classList.remove("hidden");
+      messageForm.classList.remove("hidden");
+      welcome.classList.add("hidden");
+      appShell.classList.add("chat-open");
+      [...chatList.querySelectorAll(".chat-item")].forEach(el => el.classList.remove("active"));
+      const selected = [...chatList.querySelectorAll(".chat-item")].find(el => el.textContent.includes("@" + item.username));
+      if (selected) selected.classList.add("active");
+      if (stopMessagesListener) stopMessagesListener();
+      messagesEl.innerHTML = '<div class="date-chip">Your conversation with @' + escapeHtml(item.username) + '</div>';
+      const messagesQuery = query(collection(db, "chats", item.id, "messages"), orderBy("createdAt", "asc"));
+      stopMessagesListener = onSnapshot(messagesQuery, (snapshot) => {
+        messagesEl.innerHTML = '<div class="date-chip">Your conversation with @' + escapeHtml(item.username) + '</div>';
+        for (const messageDoc of snapshot.docs) {
+          const msg = messageDoc.data();
+          const mine = msg.senderId === currentUser.uid;
+          const row = document.createElement("div");
+          row.className = "message-row" + (mine ? " mine" : "");
+          const time = msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "sending";
+          row.innerHTML = `<div class="bubble"><p>${escapeHtml(msg.text || "")}</p><time>${mine ? "You · " : ""}${escapeHtml(time)}</time></div>`;
+          messagesEl.appendChild(row);
+        }
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }, showError);
+      setTimeout(() => messageInput.focus(), 100);
+    }
+
+    $("backBtn").addEventListener("click", () => appShell.classList.remove("chat-open"));
+
+    messageForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!activeChatId || !profile || !db) return;
+      const text = messageInput.value.trim();
+      if (!text) return;
+      if (text.length > 2000) {
+        setStatus(sidebarStatus, "Messages must be 2,000 characters or fewer.");
+        return;
+      }
+      sendBtn.disabled = true;
+      messageInput.value = "";
+      try {
+        await addDoc(collection(db, "chats", activeChatId, "messages"), {
+          text,
+          senderId: currentUser.uid,
+          senderUsername: profile.username,
+          createdAt: serverTimestamp()
+        });
+      } catch (error) {
+        messageInput.value = text;
+        showError(error);
+      } finally {
+        sendBtn.disabled = false;
+        messageInput.focus();
+      }
+    });
+
+    // If Firebase config is pasted later, the initial status is replaced on successful sign-in.
+  </script>
+</body>
+</html>
